@@ -40,26 +40,25 @@ shinyUI(fluidPage(
       inlineCSS(appCSS),
       div(
         id = "loading-content",
-        h2("... loading / predicting ...")
+        h2("... predicting ...")
       ),
-
-      #hidden(
-        div(id = "app-content",
-
-          selectInput("iSamples",
-                   "Choose sample % :",
-                   c(5,10,20,30,40,50)),
-          helpText("You can choose the size of the sample to use in the App. If you choose a high number you have to be a little patience. Sizes availables: 5%, 10%, 20%, 30%, 40% y 50%."),
-          textInput("iText", "You can write whatever you want :"),
+      hidden(div(
+        selectInput("iSamples",
+                    "Choose sample % :",
+                    c(5,10,20,30,40,50)),
+        helpText("You can choose the size of the sample to use in the App. If you choose a high number you have to be a little patience. Sizes availables: 5%, 10%, 20%, 30%, 40% y 50%.")
+      )),
+      div(id = "app-content",
+          textAreaInput("iText", "You can write whatever you want :", width = "100%", height = "150px" ),
           actionButton("iWord1", "...", onclick = "Shiny.setInputValue('btnLabel', this.innerText);"),
           actionButton("iWord2", "...", onclick = "Shiny.setInputValue('btnLabel', this.innerText);"),
           actionButton("iWord3", "...", onclick = "Shiny.setInputValue('btnLabel', this.innerText);"),
-          helpText("When you write a space the App will predict the next word. If you write one or more words without a space at the end, the App will wait. If you puss in one of three button, the word is going to join to your sentence with a space at the end.")
+          helpText("When you write a space the App will predict the next word. If you write one or more words without a space at the end, the App will wait. If you puss one of three button, the word is going to join to your sentence with a space at the end.")
        
         )
-      #)
       ,
-      actionButton("iCancel", "Cancel")
+      actionButton("iCancel", "Cancel"),
+      textOutput("tError")
     ),
     
     # Show a plot of the generated distribution

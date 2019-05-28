@@ -55,8 +55,9 @@ jc.inpu = function(x) {
   }
   else
     return(tibble(words = c("","","")))
-  
-  if (nrow(y) == 1) {
+  if (nrow(y) < 1) {
+    return(tibble(words = c("","","")))
+  } else if (nrow(y) == 1) {
     input1 = tibble(word = "")
     input2 = tibble(word = "")
     input3 = y
@@ -161,16 +162,41 @@ shinyServer(function(input, output, session) {
       updateTextInput(session, "iText", value = paste0(input$iText, input$btnLabel, " "))
   }) 
   observeEvent( input$iSamples, {
-    shinyjs::show(id = "loading-content")      
+    shinyjs::show(id = "loading-content")
+    if (as.numeric(input$iSamples) > 10) {
+      output$tError = renderText("shinyapp.io: loading n-grams. Out of memory!")
+      shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")
+      
+      return()
+    }
     porc <- as.numeric(input$iSamples) / 100
     if (gporc != porc) {
       gporc <- porc
-      rm(dfTrain1, dfTrain2, dfTrain3, dfTrain4)
-      dfTrain1 <- readRDS(paste0("./final/en_US/ngrams/1ng.q", porc, ".RData"))
-      dfTrain2 <- readRDS(paste0("./final/en_US/ngrams/2ng.q", porc, ".RData"))
-      dfTrain3 <- readRDS(paste0("./final/en_US/ngrams/3ng.q", porc, ".RData"))
-      dfTrain4 <- readRDS(paste0("./final/en_US/ngrams/4ng.q", porc, ".RData"))
+      y <- try(dfTrain1 <- readRDS(paste0("./final/en_US/ngrams/1ng.q", porc, ".RData")), silent = TRUE)
+      if(inherits(y,"try-error")) {
+        output$tError = renderText("shinyapp.io: 1-n-gram. Out of memory!")
+        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
+        return()
       }
+      y <- try(dfTrain2 <- readRDS(paste0("./final/en_US/ngrams/2ng.q", porc, ".RData")), silent = TRUE)
+      if(inherits(y,"try-error")) {
+        output$tError = renderText("shinyapp.io: 2-n-gram. Out of memory!")
+        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
+        return()
+      }
+      y <- try(dfTrain3 <- readRDS(paste0("./final/en_US/ngrams/3ng.q", porc, ".RData")), silent = TRUE)
+      if(inherits(y,"try-error")) {
+        output$tError = renderText("shinyapp.io: 3-n-gram. Out of memory!")
+        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
+        return()
+      }
+      y <- try(dfTrain4 <- readRDS(paste0("./final/en_US/ngrams/4ng.q", porc, ".RData")), silent = TRUE)
+      if(inherits(y,"try-error")) {
+        output$tError = renderText("shinyapp.io: 4-n-gram. Out of memory!")
+        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
+        return()
+      }
+    }
     output$oPorc <- renderText({
       paste("% selected :", porc * 100)
     })
