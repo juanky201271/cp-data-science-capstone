@@ -131,10 +131,10 @@ jc.next <- function(txt, n = 3) {
 }
 
 gporc <- 0.05
-dfTrain1 <- readRDS(paste0("./final/en_US/ngrams/1ng.q", gporc, ".RData"))
-dfTrain2 <- readRDS(paste0("./final/en_US/ngrams/2ng.q", gporc, ".RData"))
-dfTrain3 <- readRDS(paste0("./final/en_US/ngrams/3ng.q", gporc, ".RData"))
-dfTrain4 <- readRDS(paste0("./final/en_US/ngrams/4ng.q", gporc, ".RData"))
+dfTrain1 <- readRDS(paste0("./final/en_US/ngrams/1ng.q", gporc, ".clean.RData"))
+dfTrain2 <- readRDS(paste0("./final/en_US/ngrams/2ng.q", gporc, ".clean.RData"))
+dfTrain3 <- readRDS(paste0("./final/en_US/ngrams/3ng.q", gporc, ".clean.RData"))
+dfTrain4 <- readRDS(paste0("./final/en_US/ngrams/4ng.q", gporc, ".clean.RData"))
 
 conn <- file("https://www.cs.cmu.edu/~biglou/resources/bad-words.txt","r")
 df_prof <- readLines(conn)
@@ -142,6 +142,9 @@ close(conn)
 rm(conn)
 
 shinyServer(function(input, output, session) {
+  output$oPorc <- renderText({
+    paste("% sample :", gporc * 100)
+  })
   
   observeEvent( input$iCancel, {
     stopApp()  
@@ -161,51 +164,7 @@ shinyServer(function(input, output, session) {
     if (input$btnLabel != "...")
       updateTextInput(session, "iText", value = paste0(input$iText, input$btnLabel, " "))
   }) 
-  observeEvent( input$iSamples, {
-    shinyjs::show(id = "loading-content")
-    if (as.numeric(input$iSamples) > 10) {
-      output$tError = renderText("shinyapp.io: loading n-grams. Out of memory!")
-      shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")
-      
-      return()
-    }
-    porc <- as.numeric(input$iSamples) / 100
-    if (gporc != porc) {
-      gporc <- porc
-      y <- try(dfTrain1 <- readRDS(paste0("./final/en_US/ngrams/1ng.q", porc, ".RData")), silent = TRUE)
-      if(inherits(y,"try-error")) {
-        output$tError = renderText("shinyapp.io: 1-n-gram. Out of memory!")
-        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
-        return()
-      }
-      y <- try(dfTrain2 <- readRDS(paste0("./final/en_US/ngrams/2ng.q", porc, ".RData")), silent = TRUE)
-      if(inherits(y,"try-error")) {
-        output$tError = renderText("shinyapp.io: 2-n-gram. Out of memory!")
-        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
-        return()
-      }
-      y <- try(dfTrain3 <- readRDS(paste0("./final/en_US/ngrams/3ng.q", porc, ".RData")), silent = TRUE)
-      if(inherits(y,"try-error")) {
-        output$tError = renderText("shinyapp.io: 3-n-gram. Out of memory!")
-        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
-        return()
-      }
-      y <- try(dfTrain4 <- readRDS(paste0("./final/en_US/ngrams/4ng.q", porc, ".RData")), silent = TRUE)
-      if(inherits(y,"try-error")) {
-        output$tError = renderText("shinyapp.io: 4-n-gram. Out of memory!")
-        shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
-        return()
-      }
-    }
-    output$oPorc <- renderText({
-      paste("% selected :", porc * 100)
-    })
-    output$oWordsNum <- renderText({
-      paste("The numbers of words :", sum(stri_count_words(dfTrain1)))
-    })
-    shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
-  })
-  
+
   observeEvent( input$iText, {
     if (!grepl(" $", input$iText) & !input$iText == "") {
       output$oTurnedText <- renderText({
@@ -242,6 +201,7 @@ shinyServer(function(input, output, session) {
       else
         updateActionButton(session, "iWord3", label = as.character(tb[3,1]))
       shinyjs::hide(id = "loading-content", anim = TRUE, animType = "fade")    
+      shinyjs::hide(id = "loading-bbdd-content", anim = TRUE, animType = "fade")    
     }
   })
   
